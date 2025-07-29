@@ -1,0 +1,15 @@
+@font-face {
+  font-family: "Work Sans";
+  src: url("/src/assets/worksans.ttf") format("truetype");
+}
+
+body, button {
+  font-family: 'Work Sans', sans-serif;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
