@@ -95,18 +95,52 @@ export function calculateRiskScore(patient: Patient): RiskScore {
 }
 
 export function hasDataQualityIssues(patient: Patient): boolean {
-  const bpInvalid = calculateBloodPressureRisk(patient.blood_pressure) === 0 && 
-    (patient.blood_pressure === null || patient.blood_pressure === undefined || patient.blood_pressure === '');
-    
-  const tempInvalid = calculateTemperatureRisk(patient.temperature) === 0 && 
-    (patient.temperature === null || patient.temperature === undefined || 
-     (typeof patient.temperature === 'string' && isNaN(parseFloat(patient.temperature))));
-     
-  const ageInvalid = calculateAgeRisk(patient.age) === 0 && 
-    (patient.age === null || patient.age === undefined || 
-     (typeof patient.age === 'string' && isNaN(parseFloat(patient.age))));
+  const bpInvalid = isBloodPressureInvalid(patient.blood_pressure);
+  const tempInvalid = isTemperatureInvalid(patient.temperature);
+  const ageInvalid = isAgeInvalid(patient.age);
   
   return bpInvalid || tempInvalid || ageInvalid;
+}
+
+function isBloodPressureInvalid(bloodPressure: string | null): boolean {
+  if (!bloodPressure || typeof bloodPressure !== 'string' || bloodPressure.trim() === '') {
+    return true;
+  }
+  
+  const bpParts = bloodPressure.split('/');
+  if (bpParts.length !== 2) {
+    return true;
+  }
+  
+  const systolicStr = bpParts[0].trim();
+  const diastolicStr = bpParts[1].trim();
+  
+  if (!systolicStr || !diastolicStr) {
+    return true;
+  }
+  
+  const systolic = parseFloat(systolicStr);
+  const diastolic = parseFloat(diastolicStr);
+  
+  return isNaN(systolic) || isNaN(diastolic);
+}
+
+function isTemperatureInvalid(temperature: number | string | null): boolean {
+  if (temperature === null || temperature === undefined) {
+    return true;
+  }
+  
+  const temp = typeof temperature === 'string' ? parseFloat(temperature) : temperature;
+  return isNaN(temp);
+}
+
+function isAgeInvalid(age: number | string | null): boolean {
+  if (age === null || age === undefined) {
+    return true;
+  }
+  
+  const ageNum = typeof age === 'string' ? parseFloat(age) : age;
+  return isNaN(ageNum);
 }
 
 export function hasFever(patient: Patient): boolean {
@@ -126,8 +160,10 @@ export function hasFever(patient: Patient): boolean {
 export function analyzePatient(patient: Patient): PatientAnalysis {
   const riskScore = calculateRiskScore(patient);
   const hasDataIssues = hasDataQualityIssues(patient);
-  const patientHasFever = hasFever(patient);
-  const isHighRisk = riskScore.total >= 4;
+  
+  // If patient has data issues, exclude from risk/fever calculations
+  const patientHasFever = hasDataIssues ? false : hasFever(patient);
+  const isHighRisk = hasDataIssues ? false : riskScore.total >= 4;
   
   return {
     patient,

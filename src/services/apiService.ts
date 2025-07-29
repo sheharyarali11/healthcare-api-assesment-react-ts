@@ -74,7 +74,6 @@ async function fetchWithRetry<T>(
 export async function fetchPatients(page: number = 1, limit: number = 20): Promise<PatientsResponse> {
   const url = `${API_BASE_URL}/patients?page=${page}&limit=${limit}`;
 
-  console.log(`API KEY********`, API_KEY)
   const options: RequestInit = {
     method: 'GET',
     headers: {
